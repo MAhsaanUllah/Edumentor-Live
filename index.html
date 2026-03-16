@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-deep: #0a0a0f;
+    --bg-surface: #111118;
+    --bg-panel: #16161f;
+    --bg-card: #1c1c28;
+    --bg-hover: #22222f;
+    --accent-blue: #4f8ef7;
+    --accent-green: #34d399;
+    --accent-red: #f87171;
+    --accent-yellow: #fbbf24;
+    --accent-purple: #a78bfa;
+    --text-primary: #f0f0f8;
+    --text-secondary: #8888aa;
+    --text-muted: #55556a;
+    --border: rgba(255,255,255,0.07);
+    --border-active: rgba(79,142,247,0.4);
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* TOP BAR */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-icon {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, #4f8ef7, #a78bfa);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+
+  .logo-text {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.3px;
+  }
+
+  .logo-badge {
+    font-size: 10px;
+    background: rgba(79,142,247,0.15);
+    color: var(--accent-blue);
+    border: 1px solid rgba(79,142,247,0.3);
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  /* STATUS PILLS */
+  .status-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: all 0.3s;
+  }
+
+  .status-pill.active {
+    border-color: rgba(52,211,153,0.4);
+    color: var(--accent-green);
+  }
+
+  .status-pill.speaking {
+    border-color: rgba(251,191,36,0.4);
+    color: var(--accent-yellow);
+  }
+
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    flex-shrink: 0;
+  }
+
+  .dot.green { background: var(--accent-green); box-shadow: 0 0 6px var(--accent-green); }
+  .dot.yellow { background: var(--accent-yellow); animation: pulse 1s infinite; }
+  .dot.red { background: var(--accent-red); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* MAIN LAYOUT */
+  .main {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 0;
+    height: calc(100vh - 57px);
+  }
+
+  /* LEFT — VIDEO AREA */
+  .video-area {
+    background: #08080d;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .video-stage {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .screen-preview {
+    width: 100%;
+    height: 100%;
+    background: #0d0d14;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    color: var(--text-muted);
+  }
+
+  .screen-icon {
+    width: 64px;
+    height: 40px;
+    border: 2px solid var(--text-muted);
+    border-radius: 6px;
+    position: relative;
+  }
+
+  .screen-icon::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 6px;
+    background: var(--text-muted);
+    border-radius: 2px;
+  }
+
+  .screen-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Video overlay info */
+  .video-overlay {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .vid-badge {
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-secondary);
+  }
+
+  .vid-badge.live {
+    border-color: rgba(52,211,153,0.3);
+    color: var(--accent-green);
+  }
+
+  /* BOTTOM CONTROLS */
+  .controls-bar {
+    padding: 16px 24px;
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .ctrl-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .ctrl-btn:hover .btn-icon { transform: scale(1.08); }
+
+  .btn-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+  }
+
+  .btn-icon.blue { background: var(--accent-blue); border-color: var(--accent-blue); color: white; }
+  .btn-icon.red { background: var(--accent-red); border-color: var(--accent-red); color: white; }
+  .btn-icon.green { background: rgba(52,211,153,0.15); border-color: rgba(52,211,153,0.4); color: var(--accent-green); }
+  .btn-icon.yellow { background: rgba(251,191,36,0.15); border-color: rgba(251,191,36,0.4); color: var(--accent-yellow); }
+
+  .btn-icon.ptt {
+    width: 64px;
+    height: 64px;
+    font-size: 24px;
+    background: rgba(79,142,247,0.15);
+    border: 2px solid var(--accent-blue);
+    color: var(--accent-blue);
+    transition: all 0.15s;
+  }
+
+  .btn-icon.ptt:active, .btn-icon.ptt.held {
+    background: var(--accent-blue);
+    color: white;
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(79,142,247,0.5);
+  }
+
+  .btn-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  /* RIGHT PANEL */
+  .right-panel {
+    background: var(--bg-panel);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .panel-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-surface);
+  }
+
+  .tab {
+    flex: 1;
+    padding: 12px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    user-select: none;
+  }
+
+  .tab.active {
+    color: var(--accent-blue);
+    border-bottom-color: var(--accent-blue);
+    background: rgba(79,142,247,0.05);
+  }
+
+  .tab-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: none;
+  }
+
+  .tab-content.active { display: flex; flex-direction: column; gap: 10px; }
+
+  /* Chat bubbles */
+  .bubble {
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.5;
+    max-width: 90%;
+  }
+
+  .bubble.ai {
+    background: rgba(79,142,247,0.1);
+    border: 1px solid rgba(79,142,247,0.2);
+    color: var(--text-primary);
+    align-self: flex-start;
+  }
+
+  .bubble.user {
+    background: rgba(167,139,250,0.1);
+    border: 1px solid rgba(167,139,250,0.2);
+    color: var(--text-primary);
+    align-self: flex-end;
+  }
+
+  .bubble-meta {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Log entries */
+  .log-entry {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 11.5px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .log-time {
+    color: var(--text-muted);
+    flex-shrink: 0;
+    font-size: 10px;
+    margin-top: 1px;
+  }
+
+  .log-msg { color: var(--text-secondary); }
+  .log-msg.ok { color: var(--accent-green); }
+  .log-msg.err { color: var(--accent-red); }
+  .log-msg.warn { color: var(--accent-yellow); }
+
+  /* Stats */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+  }
+
+  .stat-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+
+  .stat-val {
+    font-size: 22px;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .stat-val.blue { color: var(--accent-blue); }
+  .stat-val.green { color: var(--accent-green); }
+  .stat-val.yellow { color: var(--accent-yellow); }
+  .stat-val.muted { color: var(--text-muted); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* PTT hint */
+  .ptt-hint {
+    position: absolute;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.8);
+    border: 1px solid var(--border-active);
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    color: var(--accent-blue);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .ptt-hint.show { opacity: 1; }
+
+  /* Waveform animation */
+  .waveform {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    height: 20px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .waveform.active { opacity: 1; }
+  .wave-bar {
+    width: 3px;
+    background: var(--accent-blue);
+    border-radius: 2px;
+    animation: wave 0.8s ease-in-out infinite;
+  }
+  .wave-bar:nth-child(2) { animation-delay: 0.1s; }
+  .wave-bar:nth-child(3) { animation-delay: 0.2s; }
+  .wave-bar:nth-child(4) { animation-delay: 0.3s; }
+  .wave-bar:nth-child(5) { animation-delay: 0.1s; }
+
+  @keyframes wave {
+    0%, 100% { height: 4px; }
+    50% { height: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-icon">🎓</div>
+    <span class="logo-text">EduMentor Live</span>
+    <span class="logo-badge">LIVE AGENT</span>
+  </div>
+
+  <div class="status-row" id="statusRow">
+    <div class="status-pill" id="connPill">
+      <div class="dot red" id="connDot"></div>
+      <span id="connLabel">Disconnected</span>
+    </div>
+    <div class="status-pill" id="micPill">
+      <div class="dot" id="micDot"></div>
+      <span>Mic <span id="micCount">0</span></span>
+    </div>
+    <div class="status-pill" id="spkPill">
+      <div class="dot" id="spkDot"></div>
+      <span>Speaker <span id="spkCount">0</span></span>
+    </div>
+  </div>
+
+  <div style="font-size:11px; color:var(--text-muted); font-family:'JetBrains Mono',monospace;">
+    ws://127.0.0.1:8000
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- LEFT: VIDEO -->
+  <div class="video-area">
+    <div class="video-stage" id="videoStage">
+      <div class="screen-preview" id="screenPreview">
+        <div class="screen-icon"></div>
+        <p style="font-size:14px; color:var(--text-secondary); font-weight:500;">Screen not shared</p>
+        <p class="screen-label">Click "Start Session" to begin</p>
+      </div>
+      <video id="screenVideo" autoplay muted style="width:100%;height:100%;object-fit:contain;display:none;"></video>
+
+      <div class="video-overlay" id="videoOverlay" style="display:none;">
+        <div class="vid-badge live">● LIVE</div>
+        <div class="vid-badge" id="fpsBadge">1 FPS</div>
+        <div class="vid-badge" id="resBadge">—</div>
+      </div>
+
+      <div class="ptt-hint" id="pttHint">Hold SPACE or the button to speak</div>
+    </div>
+
+    <!-- BOTTOM CONTROLS -->
+    <div class="controls-bar">
+      <div class="ctrl-btn" id="startCtrl">
+        <div class="btn-icon blue" id="startBtn">▶</div>
+        <span class="btn-label">Start</span>
+      </div>
+
+      <div class="ctrl-btn" id="pttCtrl" style="display:none;">
+        <div class="btn-icon ptt" id="pttBtn">🎤</div>
+        <span class="btn-label">Hold to Speak</span>
+      </div>
+
+      <div class="ctrl-btn" id="pingCtrl" style="display:none;">
+        <div class="btn-icon yellow" id="pingBtn">💬</div>
+        <span class="btn-label">Text Ping</span>
+      </div>
+
+      <div class="ctrl-btn" id="stopCtrl" style="display:none;">
+        <div class="btn-icon red" id="stopBtn">■</div>
+        <span class="btn-label">End Session</span>
+      </div>
+
+      <div class="waveform" id="waveform">
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+    <div class="panel-tabs">
+      <div class="tab active" onclick="switchTab('chat')">💬 Subtitles</div>
+      <div class="tab" onclick="switchTab('logs')">🛠 Logs</div>
+      <div class="tab" onclick="switchTab('stats')">📊 Stats</div>
+    </div>
+
+    <!-- CHAT TAB -->
+    <div class="tab-content active" id="tab-chat">
+      <p style="font-size:12px; color:var(--text-muted); text-align:center; padding-top:40px;">AI responses will appear here...</p>
+    </div>
+
+    <!-- LOGS TAB -->
+    <div class="tab-content" id="tab-logs">
+    </div>
+
+    <!-- STATS TAB -->
+    <div class="tab-content" id="tab-stats">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Mic Chunks</div>
+          <div class="stat-val blue" id="statMic">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">AI Audio</div>
+          <div class="stat-val green" id="statSpk">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Frames Sent</div>
+          <div class="stat-val yellow" id="statFrames">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Session Time</div>
+          <div class="stat-val muted" id="statTime">0:00</div>
+        </div>
+      </div>
+      <div style="font-size:11px; color:var(--text-muted); font-family:'JetBrains Mono',monospace; padding:8px; background:var(--bg-card); border-radius:6px; border:1px solid var(--border);">
+        <div>Model: gemini-2.5-flash-native-audio</div>
+        <div style="margin-top:4px;">Backend: ws://127.0.0.1:8000/ws/stream</div>
+        <div style="margin-top:4px;">Audio: 16kHz PCM → 24kHz PCM</div>
+        <div style="margin-top:4px;">Vision: JPEG @ 1 FPS</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<canvas id="frameCanvas" style="display:none;"></canvas>
+
+<script>
+  let socket, screenStream, audioStream, frameInterval, micProcessorNode;
+  let audioOutputContext, audioInputContext;
+  let nextPlayTime = 0;
+  let isMicActive = false;
+  let micChunks = 0, spkChunks = 0, frameCount = 0;
+  let sessionStart = null, sessionTimer = null;
+  let currentAiBubble = null;
+
+  function switchTab(name) {
+    document.querySelectorAll('.tab').forEach((t,i) => {
+      const names = ['chat','logs','stats'];
+      t.classList.toggle('active', names[i] === name);
+    });
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+  }
+
+  function addLog(msg, type='') {
+    const logsDiv = document.getElementById('tab-logs');
+    const d = document.createElement('div');
+    d.className = 'log-entry';
+    const t = new Date().toLocaleTimeString('en-US', {hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit'});
+    d.innerHTML = `<span class="log-time">${t}</span><span class="log-msg ${type}">${msg}</span>`;
+    logsDiv.appendChild(d);
+    logsDiv.scrollTop = logsDiv.scrollHeight;
+  }
+
+  function addAiBubble(text) {
+    const chatDiv = document.getElementById('tab-chat');
+    const existing = chatDiv.querySelector('p');
+    if (existing) existing.remove();
+
+    if (!currentAiBubble) {
+      const wrap = document.createElement('div');
+      wrap.style.display = 'flex';
+      wrap.style.flexDirection = 'column';
+      wrap.style.alignItems = 'flex-start';
+      const meta = document.createElement('div');
+      meta.className = 'bubble-meta';
+      meta.innerText = 'EduMentor • ' + new Date().toLocaleTimeString();
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble ai';
+      wrap.appendChild(meta);
+      wrap.appendChild(bubble);
+      chatDiv.appendChild(wrap);
+      currentAiBubble = bubble;
+    }
+    currentAiBubble.innerHTML += text;
+    document.getElementById('tab-chat').scrollTop = 999999;
+  }
+
+  function playAudioChunk(base64Data) {
+    try {
+      if (!audioOutputContext) {
+        audioOutputContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
+      }
+      if (audioOutputContext.state === 'suspended') {
+        audioOutputContext.resume();
+      }
+
+      let b64 = base64Data.replace(/-/g, '+').replace(/_/g, '/');
+      while (b64.length % 4) b64 += '=';
+      const binary = atob(b64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
+      const int16 = new Int16Array(bytes.buffer);
+      const f32 = new Float32Array(int16.length);
+      for (let i = 0; i < int16.length; i++) f32[i] = int16[i] / 32768.0;
+
+      const buf = audioOutputContext.createBuffer(1, f32.length, 24000);
+      buf.getChannelData(0).set(f32);
+      const src = audioOutputContext.createBufferSource();
+      src.buffer = buf;
+      src.connect(audioOutputContext.destination);
+      const now = audioOutputContext.currentTime;
+      if (nextPlayTime < now) nextPlayTime = now;
+      src.start(nextPlayTime);
+      nextPlayTime += buf.duration;
+
+      spkChunks++;
+      document.getElementById('spkCount').innerText = spkChunks;
+      document.getElementById('statSpk').innerText = spkChunks;
+      document.getElementById('spkDot').className = 'dot yellow';
+      document.getElementById('spkPill').className = 'status-pill speaking';
+      setTimeout(() => {
+        document.getElementById('spkDot').className = 'dot green';
+        document.getElementById('spkPill').className = 'status-pill active';
+      }, 300);
+    } catch(e) { addLog('Playback error: ' + e.message, 'err'); }
+  }
+
+  async function startPCMRecording(stream) {
+    audioInputContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+    // AudioWorklet converts float input frames into fixed-size Int16 PCM chunks for low-latency upload.
+    const workletCode = `class PCMProcessor extends AudioWorkletProcessor {
+      constructor() { super(); this.buf = new Int16Array(2048); this.idx = 0; }
+      process(inputs) {
+        const inp = inputs[0];
+        if (inp && inp.length > 0) {
+          const ch = inp[0];
+          for (let i = 0; i < ch.length; i++) {
+            this.buf[this.idx++] = Math.max(-32768, Math.min(32767, ch[i] * 32768));
+            if (this.idx >= this.buf.length) { this.port.postMessage(this.buf.slice().buffer); this.idx = 0; }
+          }
+        }
+        return true;
+      }
+    }
+    registerProcessor("pcm-processor", PCMProcessor);`;
+    const blob = new Blob([workletCode], { type: 'application/javascript' });
+    await audioInputContext.audioWorklet.addModule(URL.createObjectURL(blob));
+    const source = audioInputContext.createMediaStreamSource(stream);
+    micProcessorNode = new AudioWorkletNode(audioInputContext, 'pcm-processor');
+    source.connect(micProcessorNode);
+    micProcessorNode.port.onmessage = (e) => {
+      if (isMicActive && socket && socket.readyState === WebSocket.OPEN) {
+        let binary = '';
+        const bytes = new Uint8Array(e.data);
+        for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+        socket.send(JSON.stringify({ type: 'audio', data: btoa(binary) }));
+        micChunks++;
+        if (micChunks % 3 === 0) {
+          document.getElementById('micCount').innerText = micChunks;
+          document.getElementById('statMic').innerText = micChunks;
+          document.getElementById('micDot').className = 'dot yellow';
+          setTimeout(() => document.getElementById('micDot').className = 'dot green', 100);
+        }
+      }
+    };
+    addLog('PCM recorder ready (16kHz)', 'ok');
+  }
+
+  function enableMic() {
+    if (!audioStream) return;
+    if (audioOutputContext && audioOutputContext.state === 'suspended') {
+      audioOutputContext.resume();
+    }
+
+    audioStream.getAudioTracks()[0].enabled = true;
+    isMicActive = true;
+
+    // Send explicit speech-start signal for manual server-side turn detection.
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ type: 'activity_start' }));
+    }
+
+    document.getElementById('pttBtn').classList.add('held');
+    document.getElementById('pttBtn').innerText = '🎙️';
+    document.querySelector('#pttCtrl .btn-label').innerText = 'Listening...';
+    document.getElementById('waveform').classList.add('active');
+    document.getElementById('micPill').className = 'status-pill active';
+    document.getElementById('micDot').className = 'dot green';
+    document.getElementById('pttHint').classList.add('show');
+    addLog('Mic ON (Activity Start)', 'ok');
+  }
+
+  function disableMic() {
+    if (!audioStream || !isMicActive) return;
+
+    audioStream.getAudioTracks()[0].enabled = false;
+    isMicActive = false;
+
+    // Send explicit speech-end signal so the backend can trigger model response generation.
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ type: 'activity_end' }));
+    }
+
+    document.getElementById('pttBtn').classList.remove('held');
+    document.getElementById('pttBtn').innerText = '🎤';
+    document.querySelector('#pttCtrl .btn-label').innerText = 'Hold to Speak';
+    document.getElementById('waveform').classList.remove('active');
+    document.getElementById('pttHint').classList.remove('show');
+    addLog('Mic OFF (Activity End sent)', 'warn');
+  }
+
+  // Keyboard parity for push-to-talk controls.
+  document.addEventListener('keydown', (e) => { if (e.code === 'Space' && !e.repeat && isMicActive === false) enableMic(); });
+  document.addEventListener('keyup', (e) => { if (e.code === 'Space') disableMic(); });
+
+  document.getElementById('pttBtn').addEventListener('mousedown', enableMic);
+  document.getElementById('pttBtn').addEventListener('mouseup', disableMic);
+  document.getElementById('pttBtn').addEventListener('mouseleave', disableMic);
+  document.getElementById('pttBtn').addEventListener('touchstart', e => { e.preventDefault(); enableMic(); });
+  document.getElementById('pttBtn').addEventListener('touchend', e => { e.preventDefault(); disableMic(); });
+
+  document.getElementById('startBtn').addEventListener('click', async () => {
+    if (!audioOutputContext) {
+      audioOutputContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
+    }
+    await audioOutputContext.resume();
+    addLog('Audio context unlocked ✓', 'ok');
+
+    try {
+      micChunks = 0; spkChunks = 0; frameCount = 0;
+      if (!audioOutputContext) {
+        audioOutputContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
+      }
+
+        // Acquire microphone first and fail fast with explicit diagnostics.
+      try {
+          addLog('Requesting Mic permission...', 'warn');
+          audioStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false });
+          audioStream.getAudioTracks()[0].enabled = false;
+          addLog('Mic granted ✓', 'ok');
+      } catch (err) {
+          addLog('MIC BLOCK: ' + err.message, 'err');
+          return;
+      }
+
+        // Acquire screen capture immediately after user gesture to satisfy browser security requirements.
+      try {
+          addLog('Requesting Screen permission...', 'warn');
+          screenStream = await navigator.mediaDevices.getDisplayMedia({ video: { cursor: 'always' }, audio: false });
+          addLog('Screen granted ✓', 'ok');
+      } catch (err) {
+          addLog('SCREEN BLOCK: ' + err.message, 'err');
+          return;
+      }
+      
+      addLog('All permissions granted. Connecting...', 'warn');
+      socket = new WebSocket('ws://127.0.0.1:8000/ws/stream');
+
+      socket.onopen = async () => {
+        document.getElementById('connDot').className = 'dot green';
+        document.getElementById('connPill').className = 'status-pill active';
+        document.getElementById('connLabel').innerText = 'Connected';
+        addLog('WebSocket connected', 'ok');
+
+        const video = document.getElementById('screenVideo');
+        video.srcObject = screenStream;
+        video.style.display = 'block';
+        document.getElementById('screenPreview').style.display = 'none';
+        document.getElementById('videoOverlay').style.display = 'flex';
+
+        addLog('Screen + mic permissions granted', 'ok');
+
+        document.getElementById('startCtrl').style.display = 'none';
+        document.getElementById('pttCtrl').style.display = 'flex';
+        document.getElementById('pingCtrl').style.display = 'flex';
+        document.getElementById('stopCtrl').style.display = 'flex';
+        document.getElementById('pttHint').classList.add('show');
+        setTimeout(() => document.getElementById('pttHint').classList.remove('show'), 3000);
+
+        const canvas = document.getElementById('frameCanvas');
+        const ctx = canvas.getContext('2d');
+        frameInterval = setInterval(() => {
+          if (video.readyState >= 2 && socket.readyState === WebSocket.OPEN) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0);
+            socket.send(JSON.stringify({ type: 'image', data: canvas.toDataURL('image/jpeg', 0.8) }));
+            frameCount++;
+            document.getElementById('statFrames').innerText = frameCount;
+            document.getElementById('resBadge').innerText = canvas.width + '×' + canvas.height;
+          }
+        }, 1000);
+
+        await startPCMRecording(audioStream);
+
+        sessionStart = Date.now();
+        sessionTimer = setInterval(() => {
+          const s = Math.floor((Date.now() - sessionStart) / 1000);
+          const m = Math.floor(s / 60);
+          document.getElementById('statTime').innerText = m + ':' + String(s % 60).padStart(2, '0');
+        }, 1000);
+
+        addLog('Session live!', 'ok');
+      };
+
+      socket.onmessage = (e) => {
+        if (audioOutputContext && audioOutputContext.state === 'suspended') {
+          audioOutputContext.resume();
+        }
+
+        // Bidirectional stream handler: consumes model events and renders audio/text outputs.
+        const ev = JSON.parse(e.data);
+
+        if (ev.content && ev.content.parts) {
+          const hasAudio = ev.content.parts.some(p => p.inlineData);
+          if (hasAudio) console.log('🔊 Audio chunk received, playing...');
+        }
+
+        if (ev.inputTranscription && ev.inputTranscription.text) {
+          addLog('🗣 You: ' + ev.inputTranscription.text, 'warn');
+        }
+        if (ev.interrupted) {
+          nextPlayTime = audioOutputContext ? audioOutputContext.currentTime : 0;
+          currentAiBubble = null;
+          addLog('AI interrupted by user', 'warn');
+          return;
+        }
+        if (ev.content && ev.content.parts) {
+          for (const part of ev.content.parts) {
+            if (part.text) addAiBubble(part.text);
+            if (part.inlineData && part.inlineData.mimeType && part.inlineData.mimeType.startsWith("audio/")) {
+              playAudioChunk(part.inlineData.data);
+            }
+          }
+        }
+        if (ev.turnComplete) {
+          currentAiBubble = null;
+          addLog('AI turn complete', 'ok');
+        }
+      };
+
+      socket.onclose = () => {
+        document.getElementById('connDot').className = 'dot red';
+        document.getElementById('connPill').className = 'status-pill';
+        document.getElementById('connLabel').innerText = 'Disconnected';
+        addLog('WebSocket closed', 'err');
+      };
+      socket.onerror = () => addLog('WebSocket error!', 'err');
+
+    } catch(err) { addLog('Init error: ' + err.message, 'err'); }
+  });
+
+  document.getElementById('stopBtn').addEventListener('click', () => {
+    if (frameInterval) clearInterval(frameInterval);
+    if (sessionTimer) clearInterval(sessionTimer);
+    if (micProcessorNode) micProcessorNode.disconnect();
+    if (audioInputContext) audioInputContext.close();
+    if (screenStream) screenStream.getTracks().forEach(t => t.stop());
+    if (audioStream) audioStream.getTracks().forEach(t => t.stop());
+    if (socket) socket.close();
+    document.getElementById('screenVideo').style.display = 'none';
+    document.getElementById('screenPreview').style.display = 'flex';
+    document.getElementById('videoOverlay').style.display = 'none';
+    document.getElementById('startCtrl').style.display = 'flex';
+    document.getElementById('pttCtrl').style.display = 'none';
+    document.getElementById('pingCtrl').style.display = 'none';
+    document.getElementById('stopCtrl').style.display = 'none';
+    addLog('Session ended manually', 'warn');
+  });
+
+  document.getElementById('pingBtn').addEventListener('click', () => {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ type: 'text', data: 'Assalam o Alaikum EduMentor! Text test — agar aawaz nahi aa rahi toh is ka jawab bol kar dein.' }));
+      addLog('Text ping sent', 'ok');
+    }
+  });
+</script>
+</body>
+</html>
