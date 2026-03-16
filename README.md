@@ -1,4 +1,10 @@
-# EduMentor Live
+# 🚀 EduMentor Live - AI Bilingual Tutor
+**Live Demo:** [https://edumentor-live-278756071986.us-central1.run.app](https://edumentor-live-278756071986.us-central1.run.app)
+
+### ✨ Features
+- **Bilingual Support:** Talks and understands both English and Urdu fluently.
+- **Multimodal Learning:** Share your screen, and the AI will guide you through your code or documents in real-time.
+- **Powered by:** Gemini 2.0 Flash & Google Cloud Run.
 
 EduMentor Live is a real-time multimodal tutoring assistant built for the Google Gemini Live API Hackathon. The system combines live screen context (vision) with low-latency conversational voice (native audio) so a student can share their screen, speak, and receive spoken guidance in the same session.
 
